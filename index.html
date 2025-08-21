@@ -24,9 +24,9 @@
 </head>
 <body>
 <div class="container">
-  <!-- Add Tasks Screen -->
-  <div id="addTasksScreen">
-    <h1>Plan Your Day</h1>
+  <!-- Task Board Screen -->
+  <div id="taskBoardScreen">
+    <h1>Productivity RPG</h1>
     <input type="text" id="taskInput" placeholder="Enter a task">
     <select id="priorityInput">
       <option value="High">High Priority</option>
@@ -34,31 +34,26 @@
       <option value="Low">Low Priority</option>
     </select>
     <button onclick="addTask()">Add Task</button>
+    
+    <h2>Tasks</h2>
     <div id="taskList"></div>
-    <button onclick="startDay()" style="margin-top:10px;">Start Day</button>
-  </div>
-
-  <!-- Day Simulation Screen -->
-  <div id="dayScreen" class="hidden">
-    <h1>Task Progression</h1>
-    <div id="currentTask"></div>
-    <button onclick="completeTask()">Complete Task</button>
+    
     <div class="progress">
       <div class="progress-bar" id="progressBar"></div>
     </div>
+    
     <div id="eventLog"></div>
   </div>
 
   <!-- Celebration Screen -->
   <div id="celebrationScreen" class="hidden">
-    <h1 class="celebration">🎉 Congrats! Day Completed! 🎉</h1>
+    <h1 class="celebration">🎉 All tasks completed! 🎉</h1>
     <button onclick="resetGame()">Start New Day</button>
   </div>
 </div>
 
 <script>
 let tasks = [];
-let currentTaskIndex = 0;
 const randomEvents = [
   "Your coworker stole your stapler 😆",
   "A motivational cat meme pops up 🐱",
@@ -70,7 +65,6 @@ const randomEvents = [
 function addTask() {
   const taskInput = document.getElementById("taskInput");
   const priorityInput = document.getElementById("priorityInput");
-  const taskList = document.getElementById("taskList");
   if(taskInput.value.trim() === "") return;
   const task = {
     id: Date.now(),
@@ -79,43 +73,36 @@ function addTask() {
     completed: false
   };
   tasks.push(task);
-  const taskDiv = document.createElement("div");
-  taskDiv.className = `task priority-${task.priority}`;
-  taskDiv.id = `task-${task.id}`;
-  taskDiv.innerText = `${task.title} (${task.priority})`;
-  taskList.appendChild(taskDiv);
+  renderTasks();
   taskInput.value = "";
-}
-
-function startDay() {
-  if(tasks.length === 0) {
-    alert("Please add at least one task!");
-    return;
-  }
-  document.getElementById("addTasksScreen").classList.add("hidden");
-  document.getElementById("dayScreen").classList.remove("hidden");
-  showCurrentTask();
-}
-
-function showCurrentTask() {
-  if(currentTaskIndex >= tasks.length) {
-    celebrate();
-    return;
-  }
-  const task = tasks[currentTaskIndex];
-  document.getElementById("currentTask").innerText = `Task: ${task.title} (${task.priority})`;
-  updateProgress();
-}
-
-function completeTask() {
-  tasks[currentTaskIndex].completed = true;
   maybeTriggerEvent();
-  currentTaskIndex++;
-  showCurrentTask();
+}
+
+function renderTasks() {
+  const taskList = document.getElementById("taskList");
+  taskList.innerHTML = "";
+  tasks.forEach(task => {
+    if(task.completed) return;
+    const taskDiv = document.createElement("div");
+    taskDiv.className = `task priority-${task.priority}`;
+    taskDiv.innerHTML = `
+      <span>${task.title} (${task.priority})</span>
+      <button onclick="completeTask(${task.id})">Complete</button>
+    `;
+    taskList.appendChild(taskDiv);
+  });
+  updateProgress();
+  checkCompletion();
+}
+
+function completeTask(taskId) {
+  const task = tasks.find(t => t.id === taskId);
+  if(task) task.completed = true;
+  renderTasks();
 }
 
 function maybeTriggerEvent() {
-  if(Math.random() < 0.3) { // 30% chance
+  if(Math.random() < 0.3) {
     const eventLog = document.getElementById("eventLog");
     const eventText = randomEvents[Math.floor(Math.random() * randomEvents.length)];
     const div = document.createElement("div");
@@ -123,12 +110,12 @@ function maybeTriggerEvent() {
     div.innerText = eventText;
     eventLog.prepend(div);
     if(eventText.includes("Email bomb")) {
-      // Add random tasks
       for(let i=0;i<3;i++) {
-        const task = {id: Date.now()+i, title: "Extra Task", priority: "Medium", completed: false};
-        tasks.push(task);
+        const extraTask = {id: Date.now()+i, title: "Extra Task", priority: "Medium", completed: false};
+        tasks.push(extraTask);
       }
     }
+    renderTasks();
   }
 }
 
@@ -137,19 +124,20 @@ function updateProgress() {
   document.getElementById("progressBar").style.width = progress + "%";
 }
 
-function celebrate() {
-  document.getElementById("dayScreen").classList.add("hidden");
-  document.getElementById("celebrationScreen").classList.remove("hidden");
+function checkCompletion() {
+  if(tasks.every(t => t.completed) && tasks.length > 0) {
+    document.getElementById("taskBoardScreen").classList.add("hidden");
+    document.getElementById("celebrationScreen").classList.remove("hidden");
+  }
 }
 
 function resetGame() {
   tasks = [];
-  currentTaskIndex = 0;
   document.getElementById("taskList").innerHTML = "";
   document.getElementById("eventLog").innerHTML = "";
   document.getElementById("progressBar").style.width = "0%";
-  document.getElementById("addTasksScreen").classList.remove("hidden");
   document.getElementById("celebrationScreen").classList.add("hidden");
+  document.getElementById("taskBoardScreen").classList.remove("hidden");
 }
 </script>
 </body>
