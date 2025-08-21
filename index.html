@@ -1,157 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Productivity RPG</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
-  body { 
-    font-family: 'Inter', sans-serif; 
-    background: #f4f4f9; 
-    margin: 0; padding: 0; 
-    display: flex; justify-content: center; align-items: center; 
-    height: 100vh; 
-    background-image: url('https://undraw.co/api/illustrations/office_workspace'); /* fallback to a safe illustration */
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-  }
-
-  .container { 
-    width: 90%; max-width: 500px; 
-    background: rgba(255,255,255,0.95); /* slightly transparent to show background */
-    padding: 20px; border-radius: 10px; 
-    box-shadow: 0 0 15px rgba(0,0,0,0.2); 
-    backdrop-filter: blur(4px); /* smooth blur for elegance */
-  }
-
-  h1 { text-align: center; margin-bottom: 20px; color: #333; }
-  input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
-  button { background: #4CAF50; color: white; border: none; cursor: pointer; transition: background 0.3s; }
-  button:hover { background: #45a049; }
-  .task { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; border-radius: 5px; background: #eee; transition: transform 0.2s; }
-  .task:hover { transform: scale(1.02); background: #f0f0f0; }
-  .priority-High { border-left: 5px solid #e74c3c; }
-  .priority-Medium { border-left: 5px solid #f1c40f; }
-  .priority-Low { border-left: 5px solid #2ecc71; }
-  .event { background: #ffeaa7; padding: 10px; margin: 5px 0; border-radius: 5px; animation: fadeIn 0.5s; }
-  @keyframes fadeIn { from {opacity: 0;} to {opacity:1;} }
-  .hidden { display: none; }
-  .progress { height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin: 10px 0; }
-  .progress-bar { height: 100%; background: #4CAF50; width: 0%; transition: width 0.5s; }
-  .celebration { text-align: center; font-size: 1.5em; color: #27ae60; }
-</style>
+  <meta charset="UTF-8">
+  <title>Office Productivity Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind via CDN for simplicity -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-size: cover;
+      background-position: center;
+      transition: background-image 1s ease-in-out;
+      font-family: sans-serif;
+    }
+    #task-input {
+      width: 100%;
+    }
+    .task-card {
+      transition: transform 0.2s;
+    }
+    .task-card:hover {
+      transform: scale(1.03);
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <div id="taskBoardScreen">
-    <h1>Productivity RPG</h1>
-    <input type="text" id="taskInput" placeholder="Enter a task">
-    <select id="priorityInput">
-      <option value="High">High Priority</option>
-      <option value="Medium">Medium Priority</option>
-      <option value="Low">Low Priority</option>
-    </select>
-    <button onclick="addTask()">Add Task</button>
+  <div class="bg-white bg-opacity-80 p-6 rounded shadow-md w-full max-w-xl">
+    <h1 class="text-2xl font-bold mb-4 text-center">Office Productivity Game</h1>
 
-    <h2>Tasks</h2>
-    <div id="taskList"></div>
-
-    <div class="progress">
-      <div class="progress-bar" id="progressBar"></div>
+    <!-- Task Input -->
+    <div class="mb-4 flex gap-2">
+      <input id="task-input" type="text" placeholder="Enter a task..." class="p-2 border rounded flex-1">
+      <select id="priority-select" class="p-2 border rounded">
+        <option value="1">Low</option>
+        <option value="2">Medium</option>
+        <option value="3">High</option>
+      </select>
+      <button id="add-task-btn" class="bg-blue-500 text-white px-4 rounded">Add</button>
     </div>
 
-    <div id="eventLog"></div>
+    <!-- Task List -->
+    <div id="tasks" class="space-y-2 mb-4"></div>
+
+    <!-- Random Event -->
+    <div id="event" class="text-center text-sm italic text-gray-700 mb-2"></div>
+
+    <!-- Completion Button -->
+    <div class="text-center">
+      <button id="complete-btn" class="bg-green-500 text-white px-4 py-2 rounded">Finish Tasks</button>
+    </div>
   </div>
 
-  <div id="celebrationScreen" class="hidden">
-    <h1 class="celebration">🎉 All tasks completed! 🎉</h1>
-    <button onclick="resetGame()">Start New Day</button>
-  </div>
-</div>
+  <script>
+    const body = document.body;
+    const taskInput = document.getElementById('task-input');
+    const addBtn = document.getElementById('add-task-btn');
+    const tasksDiv = document.getElementById('tasks');
+    const prioritySelect = document.getElementById('priority-select');
+    const completeBtn = document.getElementById('complete-btn');
+    const eventDiv = document.getElementById('event');
 
-<script>
-let tasks = [];
-const randomEvents = [
-  "Your coworker stole your stapler 😆",
-  "A motivational cat meme pops up 🐱",
-  "You got a coffee from a secret admirer ☕",
-  "Email bomb! 3 new tasks appear 📧",
-  "Manager sends surprise praise! 📝",
-];
+    let tasks = [];
 
-function addTask() {
-  const taskInput = document.getElementById("taskInput");
-  const priorityInput = document.getElementById("priorityInput");
-  if(taskInput.value.trim() === "") return;
-  const task = { id: Date.now(), title: taskInput.value, priority: priorityInput.value, completed: false };
-  tasks.push(task);
-  renderTasks();
-  taskInput.value = "";
-  maybeTriggerEvent();
-}
+    const backgrounds = [
+      'https://images.unsplash.com/photo-1581091215369-340e67b0f00b?fit=crop&w=1350&q=80',
+      'https://images.unsplash.com/photo-1565120130290-9183a5a3e72e?fit=crop&w=1350&q=80',
+      'https://images.unsplash.com/photo-1552566626-52e96b4cc0ad?fit=crop&w=1350&q=80',
+      'https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?fit=crop&w=1350&q=80'
+    ];
 
-function renderTasks() {
-  const taskList = document.getElementById("taskList");
-  taskList.innerHTML = "";
-  tasks.forEach(task => {
-    if(task.completed) return;
-    const taskDiv = document.createElement("div");
-    taskDiv.className = `task priority-${task.priority}`;
-    taskDiv.innerHTML = `<span>${task.title} (${task.priority})</span>
-                         <button onclick="completeTask(${task.id})">Complete</button>`;
-    taskList.appendChild(taskDiv);
-  });
-  updateProgress();
-  checkCompletion();
-}
+    const memes = [
+      "Don't forget the TPS reports!",
+      "Another meeting that could have been an email...",
+      "Time to dominate your to-do list!",
+      "Keep calm and pretend it's on the schedule."
+    ];
 
-function completeTask(taskId) {
-  const task = tasks.find(t => t.id === taskId);
-  if(task) task.completed = true;
-  renderTasks();
-}
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
 
-function maybeTriggerEvent() {
-  if(Math.random() < 0.3) {
-    const eventLog = document.getElementById("eventLog");
-    const eventText = randomEvents[Math.floor(Math.random() * randomEvents.length)];
-    const div = document.createElement("div");
-    div.className = "event";
-    div.innerText = eventText;
-    eventLog.prepend(div);
-    if(eventText.includes("Email bomb")) {
-      for(let i=0;i<3;i++) {
-        const extraTask = {id: Date.now()+i, title: "Extra Task", priority: "Medium", completed: false};
-        tasks.push(extraTask);
+    function setRandomBackground() {
+      body.style.backgroundImage = `url(${pickRandom(backgrounds)})`;
+    }
+
+    function showRandomEvent() {
+      if(Math.random() < 0.3) { // 30% chance
+        eventDiv.textContent = pickRandom(memes);
+      } else {
+        eventDiv.textContent = '';
       }
     }
-    renderTasks();
-  }
-}
 
-function updateProgress() {
-  const progress = (tasks.filter(t => t.completed).length / tasks.length) * 100;
-  document.getElementById("progressBar").style.width = progress + "%";
-}
+    function renderTasks() {
+      tasksDiv.innerHTML = '';
+      tasks.forEach((task, idx) => {
+        const card = document.createElement('div');
+        card.className = `task-card flex justify-between items-center p-2 border rounded bg-white`;
+        card.innerHTML = `
+          <div>
+            <strong>[${task.priority}]</strong> ${task.text}
+          </div>
+          <div class="flex gap-2">
+            <button class="bg-red-500 text-white px-2 rounded" onclick="deleteTask(${idx})">Delete</button>
+          </div>
+        `;
+        tasksDiv.appendChild(card);
+      });
+    }
 
-function checkCompletion() {
-  if(tasks.every(t => t.completed) && tasks.length > 0) {
-    document.getElementById("taskBoardScreen").classList.add("hidden");
-    document.getElementById("celebrationScreen").classList.remove("hidden");
-  }
-}
+    function addTask() {
+      const text = taskInput.value.trim();
+      const priority = prioritySelect.value;
+      if(!text) return;
+      tasks.push({text, priority});
+      taskInput.value = '';
+      renderTasks();
+      setRandomBackground();
+      showRandomEvent();
+    }
 
-function resetGame() {
-  tasks = [];
-  document.getElementById("taskList").innerHTML = "";
-  document.getElementById("eventLog").innerHTML = "";
-  document.getElementById("progressBar").style.width = "0%";
-  document.getElementById("celebrationScreen").classList.add("hidden");
-  document.getElementById("taskBoardScreen").classList.remove("hidden");
-}
-</script>
+    function deleteTask(idx) {
+      tasks.splice(idx,1);
+      renderTasks();
+      setRandomBackground();
+      showRandomEvent();
+    }
+
+    function completeTasks() {
+      if(tasks.length === 0) {
+        alert("No tasks to complete! Add some first.");
+        return;
+      }
+      alert("Congratulations! You completed your tasks for the day!");
+      tasks = [];
+      renderTasks();
+      setRandomBackground();
+      showRandomEvent();
+    }
+
+    addBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keypress', e => {
+      if(e.key === 'Enter') addTask();
+    });
+    completeBtn.addEventListener('click', completeTasks);
+
+    // Initialize background
+    setRandomBackground();
+  </script>
 </body>
 </html>
