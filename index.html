@@ -11,9 +11,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    background: linear-gradient(to right, #a1c4fd, #c2e9fb); /* Single gradient */
     background-size: cover;
     background-position: center;
-    transition: background-image 1s ease-in-out;
     font-family: sans-serif;
   }
   #task-input {
@@ -25,30 +25,18 @@
   .task-card:hover {
     transform: scale(1.03);
   }
-  #bossScreen {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0,0,0,0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 50;
-    flex-direction: column;
-    color: white;
-  }
-  .priority-low { background-color: #d1fae5; }     /* green-100 */
-  .priority-medium { background-color: #fef9c3; }  /* yellow-100 */
-  .priority-high { background-color: #fecaca; }    /* red-100 */
 </style>
 </head>
 <body>
-<div id="bossScreen">
-  <h1 class="text-3xl font-bold mb-4">Enter your boss's name:</h1>
-  <input id="bossNameInput" type="text" placeholder="Boss name..." class="p-2 rounded mb-4 text-black">
-  <button onclick="setBoss()" class="bg-blue-500 px-4 py-2 rounded">Start Day</button>
+
+<div id="initial-screen" class="bg-white bg-opacity-90 p-6 rounded shadow-md w-full max-w-md text-center">
+  <h1 class="text-2xl font-bold mb-4">Welcome to Office Productivity Game</h1>
+  <p class="mb-4">Enter your boss's name:</p>
+  <input id="boss-input" type="text" placeholder="Masqati" class="p-2 border rounded w-full mb-4">
+  <button id="start-btn" class="bg-blue-500 text-white px-4 py-2 rounded">Start Game</button>
 </div>
 
-<div id="mainContent" class="bg-white bg-opacity-80 p-6 rounded shadow-md w-full max-w-xl hidden">
+<div id="game-screen" class="hidden bg-white bg-opacity-80 p-6 rounded shadow-md w-full max-w-xl">
   <h1 class="text-2xl font-bold mb-4 text-center">Office Productivity Game</h1>
 
   <!-- Task Input -->
@@ -70,75 +58,92 @@
 </div>
 
 <script>
-const body = document.body;
 const taskInput = document.getElementById('task-input');
 const addBtn = document.getElementById('add-task-btn');
 const tasksDiv = document.getElementById('tasks');
 const prioritySelect = document.getElementById('priority-select');
 const eventDiv = document.getElementById('event');
-const bossScreen = document.getElementById('bossScreen');
-const bossNameInput = document.getElementById('bossNameInput');
-const mainContent = document.getElementById('mainContent');
+const initialScreen = document.getElementById('initial-screen');
+const gameScreen = document.getElementById('game-screen');
+const bossInput = document.getElementById('boss-input');
 
 let tasks = [];
-let boss = 'Masqati';
-const bossRemarks = [
-  "Nice work!",
-  "Keep going!",
-  "Don't forget the coffee break!",
-  "Impressive efficiency!",
-  "You are the star of the office!",
-  "That's the spirit!",
-  "I knew I could count on you!",
-  "Well done!"
-];
-
-const backgrounds = [
-  'https://pxhere.com/en/photo/1396263', 
-  'https://pxhere.com/en/photo/1609484', 
-  'https://pxhere.com/en/photo/1264881', 
-  'https://pxhere.com/en/photo/329890'
-];
+let bossName = 'Masqati';
 
 const memes = [
+  // Positive
+  "You're crushing your to-do list!",
+  "Everything is going smoothly!",
+  "Efficiency is your middle name!",
+  "Your focus is inspiring!",
+  "Productivity level: expert!",
+  "Boss is impressed!",
+  "You nailed that task!",
+  "Smooth sailing today!",
+  "Keep up the great work!",
+  "Your workflow is legendary!",
+  "No distractions today!",
+  "You're a task-completion machine!",
+  "Goals are being smashed!",
+  "You’re setting office records!",
+  "All tasks on point!",
+  // Funny
   "Don't forget the TPS reports!",
   "Another meeting that could have been an email...",
   "Time to dominate your to-do list!",
   "Keep calm and pretend it's on the schedule.",
   "Your boss just popped in… look busy!",
   "Someone stole your stapler… again.",
-  "Coffee machine broken: panic ensues."
+  "Coffee machine broken: panic ensues.",
+  "Email sent to wrong person… again!",
+  "Printer jammed: heroic fix required.",
+  "Desk avalanche incoming!",
+  "Keyboard is sticky… mysterious donut culprit.",
+  "Spilled coffee: chaos begins.",
+  "Spreadsheet nightmares return.",
+  "Someone microwaved fish in the break room.",
+  "WiFi drops during critical task!",
+  // Negative
+  "You missed a deadline!",
+  "Task backlog is growing!",
+  "Boss looks disappointed...",
+  "Oops, email typo!",
+  "Printer broke again!",
+  "Lost important file!",
+  "Meeting ran too long!",
+  "Unplanned tasks incoming!",
+  "Spreadsheet crashed!",
+  "Deadline pressure rising!",
+  "Coffee ran out… tragedy strikes!",
+  "Team needs urgent help!",
+  "Forgot to save your work!",
+  "Computer running slow!",
+  "Unexpected bug appeared!"
 ];
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function setRandomBackground() {
-  body.style.backgroundImage = `url(${pickRandom(backgrounds)})`;
-}
-
 function showRandomEvent() {
-  if(Math.random() < 0.3) {
-    eventDiv.textContent = pickRandom(memes);
-  } else {
-    eventDiv.textContent = '';
-  }
+  eventDiv.textContent = pickRandom(memes);
 }
 
 function renderTasks() {
   tasksDiv.innerHTML = '';
   tasks.forEach((task, idx) => {
-    let priorityClass = '';
-    if(task.priority === 'Low') priorityClass = 'priority-low';
-    else if(task.priority === 'Medium') priorityClass = 'priority-medium';
-    else if(task.priority === 'High') priorityClass = 'priority-high';
-
     const card = document.createElement('div');
-    card.className = `task-card flex justify-between items-center p-2 border rounded ${priorityClass}`;
+    card.className = `task-card flex justify-between items-center p-2 border rounded bg-white`;
+    
+    // Color-coded priority
+    let colorClass = 'text-gray-700';
+    if(task.priority === 'High') colorClass = 'text-red-600';
+    if(task.priority === 'Medium') colorClass = 'text-yellow-600';
+    if(task.priority === 'Low') colorClass = 'text-green-600';
+
     card.innerHTML = `
       <div>
-        <strong>[${task.priority}]</strong> ${task.text}
+        <strong class="${colorClass}">[${task.priority}]</strong> ${task.text}
       </div>
       <div class="flex gap-2">
         <button class="bg-green-500 text-white px-2 rounded" onclick="completeTask(${idx})">Complete</button>
@@ -156,43 +161,41 @@ function addTask() {
   tasks.push({text, priority});
   taskInput.value = '';
   renderTasks();
-  setRandomBackground();
   showRandomEvent();
 }
 
 function deleteTask(idx) {
   tasks.splice(idx,1);
   renderTasks();
-  setRandomBackground();
   showRandomEvent();
 }
 
 function completeTask(idx) {
   const completedTask = tasks.splice(idx,1)[0];
-  const remark = pickRandom(bossRemarks);
-  alert(`${boss} says: ${remark} ✅ Completed: ${completedTask.text}`);
+  alert(`${bossName} says: ✅ ${completedTask.text} is done!`);
   renderTasks();
-  setRandomBackground();
   showRandomEvent();
   if(tasks.length === 0) {
     setTimeout(() => {
-      alert(`${boss} says: 🎉 All tasks done! Time for a coffee break!`);
+      alert(`${bossName} says: 🎉 All tasks done! Time for a coffee break!`);
     }, 200);
   }
 }
 
+// Initial screen start button
+document.getElementById('start-btn').addEventListener('click', () => {
+  bossName = bossInput.value.trim() || 'Masqati';
+  initialScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  showRandomEvent();
+});
+
+// Event listeners for adding tasks
 addBtn.addEventListener('click', addTask);
 taskInput.addEventListener('keypress', e => {
   if(e.key === 'Enter') addTask();
 });
 
-function setBoss() {
-  const input = bossNameInput.value.trim();
-  if(input) boss = input;
-  bossScreen.style.display = 'none';
-  mainContent.classList.remove('hidden');
-  setRandomBackground();
-}
 </script>
 </body>
 </html>
