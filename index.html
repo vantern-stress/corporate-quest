@@ -3,137 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Office Productivity Game</title>
-<!-- Tailwind CDN for styling -->
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Productivity RPG</title>
 <style>
-  /* Smooth transitions for task adding/removing */
-  .task-enter {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  .task-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-    transition: all 0.3s ease;
-  }
-  .task-exit {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .task-exit-active {
-    opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
-  }
+  body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  .container { width: 90%; max-width: 500px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+  h1 { text-align: center; margin-bottom: 20px; }
+  input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+  button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+  button:hover { background: #45a049; }
+  .task { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; border-radius: 5px; background: #eee; }
+  .priority-High { border-left: 5px solid #e74c3c; }
+  .priority-Medium { border-left: 5px solid #f1c40f; }
+  .priority-Low { border-left: 5px solid #2ecc71; }
+  .event { background: #ffeaa7; padding: 10px; margin: 5px 0; border-radius: 5px; }
+  .hidden { display: none; }
+  .progress { height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+  .progress-bar { height: 100%; background: #4CAF50; width: 0%; transition: width 0.5s; }
+  .celebration { text-align: center; font-size: 1.5em; color: #27ae60; }
 </style>
 </head>
-<body class="bg-gray-100 font-sans p-6">
-
-<div class="max-w-xl mx-auto bg-white rounded-xl shadow-md p-6">
-  <h1 class="text-2xl font-bold mb-4">Office Productivity Game</h1>
-  
-  <div class="mb-4">
-    <input id="taskInput" type="text" placeholder="Add a new task..." class="border rounded p-2 w-full" />
-    <button id="addTaskBtn" class="bg-blue-500 text-white rounded p-2 mt-2 w-full hover:bg-blue-600">Add Task</button>
+<body>
+<div class="container">
+  <!-- Add Tasks Screen -->
+  <div id="addTasksScreen">
+    <h1>Plan Your Day</h1>
+    <input type="text" id="taskInput" placeholder="Enter a task">
+    <select id="priorityInput">
+      <option value="High">High Priority</option>
+      <option value="Medium">Medium Priority</option>
+      <option value="Low">Low Priority</option>
+    </select>
+    <button onclick="addTask()">Add Task</button>
+    <div id="taskList"></div>
+    <button onclick="startDay()" style="margin-top:10px;">Start Day</button>
   </div>
 
-  <ul id="taskList" class="space-y-2">
-    <!-- Tasks appear here -->
-  </ul>
-
-  <div class="mt-6">
-    <h2 class="text-xl font-semibold mb-2">Progress</h2>
-    <div class="bg-gray-200 rounded-full h-4 w-full overflow-hidden">
-      <div id="progressBar" class="bg-green-500 h-4 w-0 transition-all duration-300"></div>
+  <!-- Day Simulation Screen -->
+  <div id="dayScreen" class="hidden">
+    <h1>Task Progression</h1>
+    <div id="currentTask"></div>
+    <button onclick="completeTask()">Complete Task</button>
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
     </div>
-    <p id="progressText" class="mt-1 text-gray-700">0% completed</p>
+    <div id="eventLog"></div>
   </div>
 
-  <div class="mt-6 p-4 bg-yellow-50 rounded">
-    <p id="officeIntrigue" class="text-gray-800 italic">Watch out! Your manager is eyeing your progress...</p>
+  <!-- Celebration Screen -->
+  <div id="celebrationScreen" class="hidden">
+    <h1 class="celebration">🎉 Congrats! Day Completed! 🎉</h1>
+    <button onclick="resetGame()">Start New Day</button>
   </div>
 </div>
 
 <script>
-  const taskInput = document.getElementById('taskInput');
-  const addTaskBtn = document.getElementById('addTaskBtn');
-  const taskList = document.getElementById('taskList');
-  const progressBar = document.getElementById('progressBar');
-  const progressText = document.getElementById('progressText');
-  const officeIntrigue = document.getElementById('officeIntrigue');
+let tasks = [];
+let currentTaskIndex = 0;
+const randomEvents = [
+  "Your coworker stole your stapler 😆",
+  "A motivational cat meme pops up 🐱",
+  "You got a coffee from a secret admirer ☕",
+  "Email bomb! 3 new tasks appear 📧",
+  "Manager sends surprise praise! 📝",
+];
 
-  let tasks = [];
+function addTask() {
+  const taskInput = document.getElementById("taskInput");
+  const priorityInput = document.getElementById("priorityInput");
+  const taskList = document.getElementById("taskList");
+  if(taskInput.value.trim() === "") return;
+  const task = {
+    id: Date.now(),
+    title: taskInput.value,
+    priority: priorityInput.value,
+    completed: false
+  };
+  tasks.push(task);
+  const taskDiv = document.createElement("div");
+  taskDiv.className = `task priority-${task.priority}`;
+  taskDiv.id = `task-${task.id}`;
+  taskDiv.innerText = `${task.title} (${task.priority})`;
+  taskList.appendChild(taskDiv);
+  taskInput.value = "";
+}
 
-  function updateProgress() {
-    const completed = tasks.filter(t => t.completed).length;
-    const total = tasks.length || 1;
-    const percent = Math.round((completed / total) * 100);
-    progressBar.style.width = percent + '%';
-    progressText.textContent = `${percent}% completed`;
+function startDay() {
+  if(tasks.length === 0) {
+    alert("Please add at least one task!");
+    return;
+  }
+  document.getElementById("addTasksScreen").classList.add("hidden");
+  document.getElementById("dayScreen").classList.remove("hidden");
+  showCurrentTask();
+}
 
-    // Random office intrigue flavor text
-    if (Math.random() < 0.2) {
-      const messages = [
-        "Your coworker just bragged about finishing a similar task faster.",
-        "The manager seems pleased with your efficiency.",
-        "Rumor: The office coffee machine is out of order!",
-        "A colleague secretly stole your sticky note idea.",
-        "HR is monitoring task completion closely today."
-      ];
-      officeIntrigue.textContent = messages[Math.floor(Math.random() * messages.length)];
+function showCurrentTask() {
+  if(currentTaskIndex >= tasks.length) {
+    celebrate();
+    return;
+  }
+  const task = tasks[currentTaskIndex];
+  document.getElementById("currentTask").innerText = `Task: ${task.title} (${task.priority})`;
+  updateProgress();
+}
+
+function completeTask() {
+  tasks[currentTaskIndex].completed = true;
+  maybeTriggerEvent();
+  currentTaskIndex++;
+  showCurrentTask();
+}
+
+function maybeTriggerEvent() {
+  if(Math.random() < 0.3) { // 30% chance
+    const eventLog = document.getElementById("eventLog");
+    const eventText = randomEvents[Math.floor(Math.random() * randomEvents.length)];
+    const div = document.createElement("div");
+    div.className = "event";
+    div.innerText = eventText;
+    eventLog.prepend(div);
+    if(eventText.includes("Email bomb")) {
+      // Add random tasks
+      for(let i=0;i<3;i++) {
+        const task = {id: Date.now()+i, title: "Extra Task", priority: "Medium", completed: false};
+        tasks.push(task);
+      }
     }
   }
+}
 
-  function renderTasks() {
-    taskList.innerHTML = '';
-    tasks.forEach((task, index) => {
-      const li = document.createElement('li');
-      li.className = 'task bg-gray-50 p-2 rounded flex justify-between items-center shadow-sm';
-      if (task.completed) li.classList.add('line-through', 'text-gray-400');
+function updateProgress() {
+  const progress = (tasks.filter(t => t.completed).length / tasks.length) * 100;
+  document.getElementById("progressBar").style.width = progress + "%";
+}
 
-      const span = document.createElement('span');
-      span.textContent = task.name;
-      span.onclick = () => {
-        tasks[index].completed = !tasks[index].completed;
-        renderTasks();
-        updateProgress();
-      };
+function celebrate() {
+  document.getElementById("dayScreen").classList.add("hidden");
+  document.getElementById("celebrationScreen").classList.remove("hidden");
+}
 
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = 'Delete';
-      deleteBtn.className = 'ml-2 text-red-500 hover:text-red-700';
-      deleteBtn.onclick = () => {
-        tasks.splice(index, 1);
-        renderTasks();
-        updateProgress();
-      };
-
-      li.appendChild(span);
-      li.appendChild(deleteBtn);
-      taskList.appendChild(li);
-
-      // Trigger CSS transition
-      requestAnimationFrame(() => {
-        li.classList.add('task-enter-active');
-      });
-    });
-  }
-
-  addTaskBtn.addEventListener('click', () => {
-    const taskName = taskInput.value.trim();
-    if (taskName) {
-      tasks.push({ name: taskName, completed: false });
-      taskInput.value = '';
-      renderTasks();
-      updateProgress();
-    }
-  });
-
-  taskInput.addEventListener('keypress', e => {
-    if (e.key === 'Enter') addTaskBtn.click();
-  });
+function resetGame() {
+  tasks = [];
+  currentTaskIndex = 0;
+  document.getElementById("taskList").innerHTML = "";
+  document.getElementById("eventLog").innerHTML = "";
+  document.getElementById("progressBar").style.width = "0%";
+  document.getElementById("addTasksScreen").classList.remove("hidden");
+  document.getElementById("celebrationScreen").classList.add("hidden");
+}
 </script>
-
 </body>
 </html>
