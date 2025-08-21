@@ -5,17 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Productivity RPG</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-  .container { width: 90%; max-width: 500px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-  h1 { text-align: center; margin-bottom: 20px; }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+  body { 
+    font-family: 'Inter', sans-serif; 
+    background: #f4f4f9; 
+    margin: 0; padding: 0; 
+    display: flex; justify-content: center; align-items: center; 
+    height: 100vh; 
+    background-image: url('https://undraw.co/api/illustrations/office_workspace'); /* fallback to a safe illustration */
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .container { 
+    width: 90%; max-width: 500px; 
+    background: rgba(255,255,255,0.95); /* slightly transparent to show background */
+    padding: 20px; border-radius: 10px; 
+    box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+    backdrop-filter: blur(4px); /* smooth blur for elegance */
+  }
+
+  h1 { text-align: center; margin-bottom: 20px; color: #333; }
   input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
-  button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+  button { background: #4CAF50; color: white; border: none; cursor: pointer; transition: background 0.3s; }
   button:hover { background: #45a049; }
-  .task { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; border-radius: 5px; background: #eee; }
+  .task { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; border-radius: 5px; background: #eee; transition: transform 0.2s; }
+  .task:hover { transform: scale(1.02); background: #f0f0f0; }
   .priority-High { border-left: 5px solid #e74c3c; }
   .priority-Medium { border-left: 5px solid #f1c40f; }
   .priority-Low { border-left: 5px solid #2ecc71; }
-  .event { background: #ffeaa7; padding: 10px; margin: 5px 0; border-radius: 5px; }
+  .event { background: #ffeaa7; padding: 10px; margin: 5px 0; border-radius: 5px; animation: fadeIn 0.5s; }
+  @keyframes fadeIn { from {opacity: 0;} to {opacity:1;} }
   .hidden { display: none; }
   .progress { height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin: 10px 0; }
   .progress-bar { height: 100%; background: #4CAF50; width: 0%; transition: width 0.5s; }
@@ -24,7 +46,6 @@
 </head>
 <body>
 <div class="container">
-  <!-- Task Board Screen -->
   <div id="taskBoardScreen">
     <h1>Productivity RPG</h1>
     <input type="text" id="taskInput" placeholder="Enter a task">
@@ -34,18 +55,17 @@
       <option value="Low">Low Priority</option>
     </select>
     <button onclick="addTask()">Add Task</button>
-    
+
     <h2>Tasks</h2>
     <div id="taskList"></div>
-    
+
     <div class="progress">
       <div class="progress-bar" id="progressBar"></div>
     </div>
-    
+
     <div id="eventLog"></div>
   </div>
 
-  <!-- Celebration Screen -->
   <div id="celebrationScreen" class="hidden">
     <h1 class="celebration">🎉 All tasks completed! 🎉</h1>
     <button onclick="resetGame()">Start New Day</button>
@@ -66,12 +86,7 @@ function addTask() {
   const taskInput = document.getElementById("taskInput");
   const priorityInput = document.getElementById("priorityInput");
   if(taskInput.value.trim() === "") return;
-  const task = {
-    id: Date.now(),
-    title: taskInput.value,
-    priority: priorityInput.value,
-    completed: false
-  };
+  const task = { id: Date.now(), title: taskInput.value, priority: priorityInput.value, completed: false };
   tasks.push(task);
   renderTasks();
   taskInput.value = "";
@@ -85,10 +100,8 @@ function renderTasks() {
     if(task.completed) return;
     const taskDiv = document.createElement("div");
     taskDiv.className = `task priority-${task.priority}`;
-    taskDiv.innerHTML = `
-      <span>${task.title} (${task.priority})</span>
-      <button onclick="completeTask(${task.id})">Complete</button>
-    `;
+    taskDiv.innerHTML = `<span>${task.title} (${task.priority})</span>
+                         <button onclick="completeTask(${task.id})">Complete</button>`;
     taskList.appendChild(taskDiv);
   });
   updateProgress();
