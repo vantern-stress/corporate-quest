@@ -1,156 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Office Productivity Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Tailwind via CDN for simplicity -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-size: cover;
-      background-position: center;
-      transition: background-image 1s ease-in-out;
-      font-family: sans-serif;
-    }
-    #task-input {
-      width: 100%;
-    }
-    .task-card {
-      transition: transform 0.2s;
-    }
-    .task-card:hover {
-      transform: scale(1.03);
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Office Productivity Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    transition: background-image 1s ease-in-out;
+    font-family: sans-serif;
+  }
+  #task-input {
+    width: 100%;
+  }
+  .task-card {
+    transition: transform 0.2s;
+  }
+  .task-card:hover {
+    transform: scale(1.03);
+  }
+  #bossScreen {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    flex-direction: column;
+    color: white;
+  }
+  .priority-low { background-color: #d1fae5; }     /* green-100 */
+  .priority-medium { background-color: #fef9c3; }  /* yellow-100 */
+  .priority-high { background-color: #fecaca; }    /* red-100 */
+</style>
 </head>
 <body>
-  <div class="bg-white bg-opacity-80 p-6 rounded shadow-md w-full max-w-xl">
-    <h1 class="text-2xl font-bold mb-4 text-center">Office Productivity Game</h1>
+<div id="bossScreen">
+  <h1 class="text-3xl font-bold mb-4">Enter your boss's name:</h1>
+  <input id="bossNameInput" type="text" placeholder="Boss name..." class="p-2 rounded mb-4 text-black">
+  <button onclick="setBoss()" class="bg-blue-500 px-4 py-2 rounded">Start Day</button>
+</div>
 
-    <!-- Task Input -->
-    <div class="mb-4 flex gap-2">
-      <input id="task-input" type="text" placeholder="Enter a task..." class="p-2 border rounded flex-1">
-      <select id="priority-select" class="p-2 border rounded">
-        <option value="1">Low</option>
-        <option value="2">Medium</option>
-        <option value="3">High</option>
-      </select>
-      <button id="add-task-btn" class="bg-blue-500 text-white px-4 rounded">Add</button>
-    </div>
+<div id="mainContent" class="bg-white bg-opacity-80 p-6 rounded shadow-md w-full max-w-xl hidden">
+  <h1 class="text-2xl font-bold mb-4 text-center">Office Productivity Game</h1>
 
-    <!-- Task List -->
-    <div id="tasks" class="space-y-2 mb-4"></div>
-
-    <!-- Random Event -->
-    <div id="event" class="text-center text-sm italic text-gray-700 mb-2"></div>
-
-    <!-- Completion Button -->
-    <div class="text-center">
-      <button id="complete-btn" class="bg-green-500 text-white px-4 py-2 rounded">Finish Tasks</button>
-    </div>
+  <!-- Task Input -->
+  <div class="mb-4 flex gap-2">
+    <input id="task-input" type="text" placeholder="Enter a task..." class="p-2 border rounded flex-1">
+    <select id="priority-select" class="p-2 border rounded">
+      <option value="Low">Low</option>
+      <option value="Medium">Medium</option>
+      <option value="High">High</option>
+    </select>
+    <button id="add-task-btn" class="bg-blue-500 text-white px-4 rounded">Add</button>
   </div>
 
-  <script>
-    const body = document.body;
-    const taskInput = document.getElementById('task-input');
-    const addBtn = document.getElementById('add-task-btn');
-    const tasksDiv = document.getElementById('tasks');
-    const prioritySelect = document.getElementById('priority-select');
-    const completeBtn = document.getElementById('complete-btn');
-    const eventDiv = document.getElementById('event');
+  <!-- Task List -->
+  <div id="tasks" class="space-y-2 mb-4"></div>
 
-    let tasks = [];
+  <!-- Random Event -->
+  <div id="event" class="text-center text-sm italic text-gray-700 mb-2"></div>
+</div>
 
-    const backgrounds = [
-      'https://images.unsplash.com/photo-1581091215369-340e67b0f00b?fit=crop&w=1350&q=80',
-      'https://images.unsplash.com/photo-1565120130290-9183a5a3e72e?fit=crop&w=1350&q=80',
-      'https://images.unsplash.com/photo-1552566626-52e96b4cc0ad?fit=crop&w=1350&q=80',
-      'https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?fit=crop&w=1350&q=80'
-    ];
+<script>
+const body = document.body;
+const taskInput = document.getElementById('task-input');
+const addBtn = document.getElementById('add-task-btn');
+const tasksDiv = document.getElementById('tasks');
+const prioritySelect = document.getElementById('priority-select');
+const eventDiv = document.getElementById('event');
+const bossScreen = document.getElementById('bossScreen');
+const bossNameInput = document.getElementById('bossNameInput');
+const mainContent = document.getElementById('mainContent');
 
-    const memes = [
-      "Don't forget the TPS reports!",
-      "Another meeting that could have been an email...",
-      "Time to dominate your to-do list!",
-      "Keep calm and pretend it's on the schedule."
-    ];
+let tasks = [];
+let boss = 'Masqati';
+const bossRemarks = [
+  "Nice work!",
+  "Keep going!",
+  "Don't forget the coffee break!",
+  "Impressive efficiency!",
+  "You are the star of the office!",
+  "That's the spirit!",
+  "I knew I could count on you!",
+  "Well done!"
+];
 
-    function pickRandom(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
+const backgrounds = [
+  'https://pxhere.com/en/photo/1396263', 
+  'https://pxhere.com/en/photo/1609484', 
+  'https://pxhere.com/en/photo/1264881', 
+  'https://pxhere.com/en/photo/329890'
+];
 
-    function setRandomBackground() {
-      body.style.backgroundImage = `url(${pickRandom(backgrounds)})`;
-    }
+const memes = [
+  "Don't forget the TPS reports!",
+  "Another meeting that could have been an email...",
+  "Time to dominate your to-do list!",
+  "Keep calm and pretend it's on the schedule.",
+  "Your boss just popped in… look busy!",
+  "Someone stole your stapler… again.",
+  "Coffee machine broken: panic ensues."
+];
 
-    function showRandomEvent() {
-      if(Math.random() < 0.3) { // 30% chance
-        eventDiv.textContent = pickRandom(memes);
-      } else {
-        eventDiv.textContent = '';
-      }
-    }
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-    function renderTasks() {
-      tasksDiv.innerHTML = '';
-      tasks.forEach((task, idx) => {
-        const card = document.createElement('div');
-        card.className = `task-card flex justify-between items-center p-2 border rounded bg-white`;
-        card.innerHTML = `
-          <div>
-            <strong>[${task.priority}]</strong> ${task.text}
-          </div>
-          <div class="flex gap-2">
-            <button class="bg-red-500 text-white px-2 rounded" onclick="deleteTask(${idx})">Delete</button>
-          </div>
-        `;
-        tasksDiv.appendChild(card);
-      });
-    }
+function setRandomBackground() {
+  body.style.backgroundImage = `url(${pickRandom(backgrounds)})`;
+}
 
-    function addTask() {
-      const text = taskInput.value.trim();
-      const priority = prioritySelect.value;
-      if(!text) return;
-      tasks.push({text, priority});
-      taskInput.value = '';
-      renderTasks();
-      setRandomBackground();
-      showRandomEvent();
-    }
+function showRandomEvent() {
+  if(Math.random() < 0.3) {
+    eventDiv.textContent = pickRandom(memes);
+  } else {
+    eventDiv.textContent = '';
+  }
+}
 
-    function deleteTask(idx) {
-      tasks.splice(idx,1);
-      renderTasks();
-      setRandomBackground();
-      showRandomEvent();
-    }
+function renderTasks() {
+  tasksDiv.innerHTML = '';
+  tasks.forEach((task, idx) => {
+    let priorityClass = '';
+    if(task.priority === 'Low') priorityClass = 'priority-low';
+    else if(task.priority === 'Medium') priorityClass = 'priority-medium';
+    else if(task.priority === 'High') priorityClass = 'priority-high';
 
-    function completeTasks() {
-      if(tasks.length === 0) {
-        alert("No tasks to complete! Add some first.");
-        return;
-      }
-      alert("Congratulations! You completed your tasks for the day!");
-      tasks = [];
-      renderTasks();
-      setRandomBackground();
-      showRandomEvent();
-    }
+    const card = document.createElement('div');
+    card.className = `task-card flex justify-between items-center p-2 border rounded ${priorityClass}`;
+    card.innerHTML = `
+      <div>
+        <strong>[${task.priority}]</strong> ${task.text}
+      </div>
+      <div class="flex gap-2">
+        <button class="bg-green-500 text-white px-2 rounded" onclick="completeTask(${idx})">Complete</button>
+        <button class="bg-red-500 text-white px-2 rounded" onclick="deleteTask(${idx})">Delete</button>
+      </div>
+    `;
+    tasksDiv.appendChild(card);
+  });
+}
 
-    addBtn.addEventListener('click', addTask);
-    taskInput.addEventListener('keypress', e => {
-      if(e.key === 'Enter') addTask();
-    });
-    completeBtn.addEventListener('click', completeTasks);
+function addTask() {
+  const text = taskInput.value.trim();
+  const priority = prioritySelect.value;
+  if(!text) return;
+  tasks.push({text, priority});
+  taskInput.value = '';
+  renderTasks();
+  setRandomBackground();
+  showRandomEvent();
+}
 
-    // Initialize background
-    setRandomBackground();
-  </script>
+function deleteTask(idx) {
+  tasks.splice(idx,1);
+  renderTasks();
+  setRandomBackground();
+  showRandomEvent();
+}
+
+function completeTask(idx) {
+  const completedTask = tasks.splice(idx,1)[0];
+  const remark = pickRandom(bossRemarks);
+  alert(`${boss} says: ${remark} ✅ Completed: ${completedTask.text}`);
+  renderTasks();
+  setRandomBackground();
+  showRandomEvent();
+  if(tasks.length === 0) {
+    setTimeout(() => {
+      alert(`${boss} says: 🎉 All tasks done! Time for a coffee break!`);
+    }, 200);
+  }
+}
+
+addBtn.addEventListener('click', addTask);
+taskInput.addEventListener('keypress', e => {
+  if(e.key === 'Enter') addTask();
+});
+
+function setBoss() {
+  const input = bossNameInput.value.trim();
+  if(input) boss = input;
+  bossScreen.style.display = 'none';
+  mainContent.classList.remove('hidden');
+  setRandomBackground();
+}
+</script>
 </body>
 </html>
